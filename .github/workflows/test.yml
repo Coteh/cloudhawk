@@ -1,0 +1,17 @@
+name: Run Tests
+on: [push]
+jobs:
+    cypress-run:
+        runs-on: ubuntu-latest
+        steps:
+            - run: echo "Checking out ${{ github.ref }} from ${{ github.repository }}."
+            - name: Check out repository code
+              uses: actions/checkout@v2
+            - name: Install dependencies needed to build web app
+              run: npm install --production
+            - name: Build web app
+              run: npm run build
+            - name: Run test server
+              run: python -m http.server --directory build 3000 &
+            - name: Run Cypress tests
+              uses: cypress-io/github-action@v4
