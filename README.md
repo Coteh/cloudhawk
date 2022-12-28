@@ -1,6 +1,6 @@
 # <img src="src/assets/cloudhawk-logo.png" alt="CloudHawk logo" style="width: 80px"></img> cloudhawk
 
-[![Run Tests](https://github.com/Coteh/wordle-clone/actions/workflows/test.yml/badge.svg)](https://github.com/Coteh/wordle-clone/actions/workflows/test.yml)
+[![Run Tests](https://github.com/Coteh/cloudhawk/actions/workflows/test.yml/badge.svg)](https://github.com/Coteh/cloudhawk/actions/workflows/test.yml)
 
 <span style="font-size: 36px; font-weight: bold;">Very early stages and unstable. Use at your own risk!</span>
 
