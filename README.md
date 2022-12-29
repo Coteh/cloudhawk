@@ -44,7 +44,7 @@ go run main.go
 ```sh
 ./scripts/build-docker-image.sh
 
-docker run --env-file .env -p 8080:8080 cloudhawk
+docker run --env-file .env -p 8080:8080 -d cloudhawk
 ```
 
 ## Development

@@ -1,2 +1,5 @@
 # TODO find out a way to use both .gitignore and .prettierignore
 server
+
+build/
+volume/
