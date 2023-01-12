@@ -111,6 +111,7 @@ export const QueryPage: React.FC<{}> = () => {
         setLogGroupName(queryResult.logGroups[0]);
         setQueryId(queryResult.queryId);
         setQueryResults([]);
+        setIsCached(false);
         handleFetchQueryResults(queryResult.queryId);
 
         setQueryPageState(QueryPageState.QUERY_RUNNING);
@@ -191,9 +192,21 @@ export const QueryPage: React.FC<{}> = () => {
                 return (
                     <>
                         <Flex>
-                            {queryStatus === 'Failed'
-                                ? 'Query failed to execute'
-                                : `Query is ${queryStatus}`}
+                            <Box marginRight={'2em'}>
+                                {queryId && queryResults && (
+                                    <span>
+                                        {queryResults.length} results
+                                        {isCached ? ' (cached)' : ''}
+                                    </span>
+                                )}
+                            </Box>
+                            {!isCached && (
+                                <Box>
+                                    {queryStatus === 'Failed'
+                                        ? 'Query failed to execute'
+                                        : `Query is ${queryStatus}`}
+                                </Box>
+                            )}
                         </Flex>
                         <LogView
                             queryDefinition={queryDefinition}
@@ -291,14 +304,6 @@ export const QueryPage: React.FC<{}> = () => {
                                         margin: '2px',
                                     }}
                                 >
-                                    <Box>
-                                        {queryId && queryResults && (
-                                            <span>
-                                                {queryResults.length} results
-                                                {isCached ? ' (cached)' : ''}
-                                            </span>
-                                        )}
-                                    </Box>
                                     {renderQueryPanelContents(
                                         queryDefinition,
                                         queryResults
