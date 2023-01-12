@@ -110,6 +110,8 @@ export const QueryPage: React.FC<{}> = () => {
         setQueryPrompt(queryResult.queryPrompt);
         setLogGroupName(queryResult.logGroups[0]);
         setQueryId(queryResult.queryId);
+        setQueryResults([]);
+        setIsCached(false);
         handleFetchQueryResults(queryResult.queryId);
 
         setQueryPageState(QueryPageState.QUERY_RUNNING);
@@ -132,13 +134,13 @@ export const QueryPage: React.FC<{}> = () => {
                     handleFetchQueryResults(queryId);
                 }, 1000);
             }
-            return;
+        } else {
+            setQueryPageState(QueryPageState.QUERY_COMPLETE);
         }
 
         const queryResults = queryResult.queryResults;
 
         setQueryResults(queryResults);
-        setQueryPageState(QueryPageState.QUERY_COMPLETE);
 
         resultsContext.addQueryResults(queryId, queryResults);
     };
@@ -186,21 +188,33 @@ export const QueryPage: React.FC<{}> = () => {
     ) => {
         switch (queryPageState) {
             case QueryPageState.QUERY_COMPLETE:
-                return (
-                    <LogView
-                        queryDefinition={queryDefinition}
-                        queryResults={queryResults}
-                        onColumnAdd={handleColumnAdd}
-                        onColumnRemove={handleColumnRemove}
-                    />
-                );
             case QueryPageState.QUERY_RUNNING:
                 return (
-                    <Flex>
-                        {queryStatus === 'Failed'
-                            ? 'Query failed to execute'
-                            : `Query is ${queryStatus}`}
-                    </Flex>
+                    <>
+                        <Flex>
+                            <Box marginRight={'2em'}>
+                                {queryId && queryResults && (
+                                    <span>
+                                        {queryResults.length} results
+                                        {isCached ? ' (cached)' : ''}
+                                    </span>
+                                )}
+                            </Box>
+                            {!isCached && (
+                                <Box>
+                                    {queryStatus === 'Failed'
+                                        ? 'Query failed to execute'
+                                        : `Query is ${queryStatus}`}
+                                </Box>
+                            )}
+                        </Flex>
+                        <LogView
+                            queryDefinition={queryDefinition}
+                            queryResults={queryResults}
+                            onColumnAdd={handleColumnAdd}
+                            onColumnRemove={handleColumnRemove}
+                        />
+                    </>
                 );
             case QueryPageState.QUERY_ERROR:
                 return <Flex>Error performing query: {queryErrorText}</Flex>;
@@ -290,14 +304,6 @@ export const QueryPage: React.FC<{}> = () => {
                                         margin: '2px',
                                     }}
                                 >
-                                    <Box>
-                                        {queryId && queryResults && (
-                                            <span>
-                                                {queryResults.length} results
-                                                {isCached ? ' (cached)' : ''}
-                                            </span>
-                                        )}
-                                    </Box>
                                     {renderQueryPanelContents(
                                         queryDefinition,
                                         queryResults
