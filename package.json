@@ -5,7 +5,7 @@
     "author": "James Cote (Coteh)",
     "license": "MIT",
     "dependencies": {
-        "@chakra-ui/react": "^2.4.8",
+        "@chakra-ui/react": "^2.4.9",
         "@emotion/react": "^11.10.5",
         "@emotion/styled": "^11.10.5",
         "@types/node": "^16.18.2",
