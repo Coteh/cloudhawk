@@ -12,8 +12,10 @@ import {
     Image,
     TabPanel,
     FormLabel,
+    Checkbox,
+    Highlight,
 } from '@chakra-ui/react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     fetchQueryResults,
     QueryExecutionStatus,
@@ -31,6 +33,8 @@ import {
 import { QueryResultsContext } from '../context/QueryResultsContext';
 import { useLocalStorageState } from '../hook/useLocalStorageState';
 import CloudhawkLogo from '../assets/cloudhawk-logo.png';
+import { queryLogGroups } from '../action/logGroups';
+import { LogGroupSelector } from '../component/LogGroupSelector';
 
 enum QueryPageState {
     QUERY_PREPARE = 0,
@@ -53,9 +57,7 @@ export const QueryPage: React.FC<{}> = () => {
     const [queryPrompt, setQueryPrompt] = useState(
         currentQueryDef?.queryPrompt || ''
     );
-    const [logGroupName, setLogGroupName] = useState(
-        (currentQueryDef?.logGroups && currentQueryDef?.logGroups[0]) || ''
-    );
+    const [logGroupPrefix, setLogGroupPrefix] = useState("");
     const [queryId, setQueryId] = useState(currentQueryDef?.queryId || '');
     const [queryStatus, setQueryStatus] =
         useState<QueryExecutionStatus>('Unknown');
@@ -67,6 +69,11 @@ export const QueryPage: React.FC<{}> = () => {
 
     const [queryResults, setQueryResults] = useState<QueryResults>();
 
+    const [logGroups, setLogGroups] = useState<string[]>([]);
+    const [selectedLogGroups, setSelectedLogGroups] = useState<string[]>([]);
+
+    const logGroupQueryTimeout = useRef<NodeJS.Timeout>();
+
     const handleTabChange = (index: number) => {
         const currentQueryDef =
             controlContext.queryDefinitions[index] ||
@@ -75,7 +82,7 @@ export const QueryPage: React.FC<{}> = () => {
 
         setCurrentTabIndex(index);
         setQueryPrompt(currentQueryDef.queryPrompt);
-        setLogGroupName(currentQueryDef.logGroups[0] || '');
+        setSelectedLogGroups(currentQueryDef.logGroups);
         setQueryId(currentQueryDef.queryId);
 
         const queryResults = resultsContext.getQueryResults(
@@ -95,7 +102,7 @@ export const QueryPage: React.FC<{}> = () => {
             resultsContext.removeQueryResults(queryId);
         }
 
-        const logGroupNames = logGroupName.split(',');
+        const logGroupNames = selectedLogGroups
         let queryResult;
         try {
             queryResult = await runQuery(logGroupNames, queryPrompt);
@@ -108,7 +115,6 @@ export const QueryPage: React.FC<{}> = () => {
         setCurrentQueryDef(queryResult);
         controlContext.updateQueryDefinition(currentTabIndex, queryResult);
         setQueryPrompt(queryResult.queryPrompt);
-        setLogGroupName(queryResult.logGroups[0]);
         setQueryId(queryResult.queryId);
         setQueryResults([]);
         setIsCached(false);
@@ -151,8 +157,22 @@ export const QueryPage: React.FC<{}> = () => {
         }
     }, [resultsContext.hasRetrievedResults]);
 
+    useEffect(() => {
+        const closeLogGroupsPanelByKey = (e: any) => {
+            if (e.key === "Escape") {
+                setLogGroups([]);
+            }
+        };
+
+        document.addEventListener("keydown", closeLogGroupsPanelByKey);
+
+        return () => {
+            document.removeEventListener("keydown", closeLogGroupsPanelByKey);
+        };
+    }, []);
+
     const tabBarHeight = 58;
-    const queryBoxHeight = 184;
+    const queryBoxHeight = 220;
 
     const handleColumnAdd = (column: string) => {
         const newQueryDef = JSON.parse(JSON.stringify(currentQueryDef));
@@ -180,6 +200,41 @@ export const QueryPage: React.FC<{}> = () => {
         ];
         setCurrentQueryDef(newQueryDef);
         controlContext.updateQueryDefinition(currentTabIndex, newQueryDef);
+    };
+    
+    const triggerLogGroupQuery = async (prefix: string) => {
+        const logGroups = await queryLogGroups(prefix);
+        console.log(logGroups);
+        setLogGroups(logGroups);
+    };
+
+    const handleLogGroupChange = async (prefix: string) => {
+        setLogGroupPrefix(prefix);
+        if (!prefix || prefix.length <= 2) {
+            setLogGroups([]);
+            return;
+        }
+        if (logGroupQueryTimeout.current) {
+            console.log("clearing old timeout")
+            clearTimeout(logGroupQueryTimeout.current);
+            logGroupQueryTimeout.current = undefined;
+        }
+        console.log("setting new timeout")
+        logGroupQueryTimeout.current = setTimeout(() => {
+            console.log("firing log group query")
+            triggerLogGroupQuery(prefix);
+        }, 1000);
+    };
+
+    const handleLogGroupSelected = async (logGroup: string, selected: boolean) => {
+        setSelectedLogGroups(selectedLogGroups => {
+            const newSelectedLogGroups = selectedLogGroups.filter((selectedLogGroup => selectedLogGroup !== logGroup));
+            if (selected) {
+                newSelectedLogGroups.push(logGroup);
+            }
+            console.log(newSelectedLogGroups)
+            return newSelectedLogGroups;
+        });
     };
 
     const renderQueryPanelContents = (
@@ -241,9 +296,9 @@ export const QueryPage: React.FC<{}> = () => {
                                 onCloseClicked={() => {
                                     controlContext.removeQueryDefinition(index);
                                 }}
-                            >
-                                {queryDefinition.queryId || 'New Query'}
-                            </QueryTab>
+                                queryTabName={queryDefinition.queryId || 'New Query'}
+                                key={`QueryTab=${index}`}
+                            />
                         )
                     )}
                     <Tab
@@ -256,36 +311,59 @@ export const QueryPage: React.FC<{}> = () => {
                     </Tab>
                 </TabList>
                 <TabPanels height={`calc(100% - ${tabBarHeight}px)`}>
-                    {controlContext.queryDefinitions.map((queryDefinition) => {
+                    {controlContext.queryDefinitions.map((queryDefinition, index) => {
                         return (
                             <QueryTabPanel
                                 style={{
                                     height: '100%',
                                     overflowX: 'hidden',
                                 }}
+                                key={`QueryTabPanel=${index}`}
                             >
                                 <Box height={queryBoxHeight}>
                                     <Box data-cy="query-title">
                                         {queryDefinition.queryId || 'New Query'}
                                     </Box>
-                                    <Flex alignItems={'center'}>
-                                        <FormLabel
-                                            width={'100px'}
-                                            textAlign={'center'}
-                                            verticalAlign={'middle'}
-                                            margin={0}
-                                            htmlFor="log-group-name"
-                                        >
-                                            Log Group:
-                                        </FormLabel>
-                                        <Input
-                                            type={'text'}
-                                            value={logGroupName}
-                                            name="log-group-name"
-                                            onChange={(e) =>
-                                                setLogGroupName(e.target.value)
-                                            }
-                                        ></Input>
+                                    <Flex alignItems={'center'} flexDirection={"column"}>
+                                        <Flex flexDirection={"row"} width="100%">
+                                            <FormLabel
+                                                width={'100px'}
+                                                textAlign={'center'}
+                                                verticalAlign={'middle'}
+                                                margin={0}
+                                                htmlFor="log-group-name"
+                                            >
+                                                Log Groups:
+                                            </FormLabel>
+                                            <Flex flexDirection={"row"} flexWrap="wrap">
+                                                {selectedLogGroups.map(selectedLogGroup => (
+                                                    <Box position={"relative"}>
+                                                        <Box backgroundColor={"lightgrey"} borderRadius="0.2em" paddingRight={"2em"}>
+                                                            {selectedLogGroup}
+                                                        </Box>
+                                                        <Button margin={'0em'} size="xs" onClick={(e) => {handleLogGroupSelected(selectedLogGroup, false)}} position="absolute" top={"0"} right={0}>
+                                                            X
+                                                        </Button>
+                                                    </Box>
+                                                ))}
+                                            </Flex>
+                                        </Flex>
+                                        <Box position={"relative"} width="100%" id="log-group-prefix-box">
+                                            <Input
+                                                type={'text'}
+                                                value={logGroupPrefix}
+                                                name="log-group-prefix"
+                                                placeholder='Enter Log Group prefix'
+                                                onChange={(e) =>
+                                                    handleLogGroupChange(e.target.value)
+                                                }
+                                            ></Input>
+                                            <Box position={"absolute"} width="100%" zIndex={200} display={logGroups.length > 0 ? "block" : "none"}>
+                                                <Flex backgroundColor="white" flexDirection={"column"} height="200px" overflow="auto">
+                                                    <LogGroupSelector logGroups={logGroups} selectedLogGroups={selectedLogGroups} onLogGroupSelected={handleLogGroupSelected}/>
+                                                </Flex>
+                                            </Box>
+                                        </Box>
                                     </Flex>
                                     <Textarea
                                         value={queryPrompt}
