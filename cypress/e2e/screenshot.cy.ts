@@ -62,9 +62,18 @@ describe('screenshot', () => {
                 );
 
                 // Scroll down through the logs then scroll back up
-                cy.get('[data-test-id="virtuoso-scroller"]').scrollTo(0, 500, {
-                    duration: 2000,
-                });
+                cy.get("div[data-cy='query-title']")
+                    .parent()
+                    .siblings()
+                    .within(() => {
+                        cy.get('[data-test-id="virtuoso-scroller"]').scrollTo(
+                            0,
+                            500,
+                            {
+                                duration: 2000,
+                            }
+                        );
+                    });
 
                 // Click expand to open up the full list of column data
                 cy.contains('Some log from app: 8')
@@ -135,9 +144,18 @@ describe('screenshot', () => {
                     });
 
                 // Scroll back up
-                cy.get('[data-test-id="virtuoso-scroller"]').scrollTo(0, 0, {
-                    duration: 1000,
-                });
+                cy.get("div[data-cy='query-title']")
+                    .parent()
+                    .siblings()
+                    .within(() => {
+                        cy.get('[data-test-id="virtuoso-scroller"]').scrollTo(
+                            0,
+                            0,
+                            {
+                                duration: 1000,
+                            }
+                        );
+                    });
             });
         }
     );

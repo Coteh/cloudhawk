@@ -57,7 +57,7 @@ export const QueryPage: React.FC<{}> = () => {
     const [queryPrompt, setQueryPrompt] = useState(
         currentQueryDef?.queryPrompt || ''
     );
-    const [logGroupPrefix, setLogGroupPrefix] = useState("");
+    const [logGroupPrefix, setLogGroupPrefix] = useState('');
     const [queryId, setQueryId] = useState(currentQueryDef?.queryId || '');
     const [queryStatus, setQueryStatus] =
         useState<QueryExecutionStatus>('Unknown');
@@ -102,7 +102,7 @@ export const QueryPage: React.FC<{}> = () => {
             resultsContext.removeQueryResults(queryId);
         }
 
-        const logGroupNames = selectedLogGroups
+        const logGroupNames = selectedLogGroups;
         let queryResult;
         try {
             queryResult = await runQuery(logGroupNames, queryPrompt);
@@ -159,15 +159,15 @@ export const QueryPage: React.FC<{}> = () => {
 
     useEffect(() => {
         const closeLogGroupsPanelByKey = (e: any) => {
-            if (e.key === "Escape") {
+            if (e.key === 'Escape') {
                 setLogGroups([]);
             }
         };
 
-        document.addEventListener("keydown", closeLogGroupsPanelByKey);
+        document.addEventListener('keydown', closeLogGroupsPanelByKey);
 
         return () => {
-            document.removeEventListener("keydown", closeLogGroupsPanelByKey);
+            document.removeEventListener('keydown', closeLogGroupsPanelByKey);
         };
     }, []);
 
@@ -201,10 +201,9 @@ export const QueryPage: React.FC<{}> = () => {
         setCurrentQueryDef(newQueryDef);
         controlContext.updateQueryDefinition(currentTabIndex, newQueryDef);
     };
-    
+
     const triggerLogGroupQuery = async (prefix: string) => {
         const logGroups = await queryLogGroups(prefix);
-        console.log(logGroups);
         setLogGroups(logGroups);
     };
 
@@ -215,24 +214,24 @@ export const QueryPage: React.FC<{}> = () => {
             return;
         }
         if (logGroupQueryTimeout.current) {
-            console.log("clearing old timeout")
             clearTimeout(logGroupQueryTimeout.current);
-            logGroupQueryTimeout.current = undefined;
         }
-        console.log("setting new timeout")
         logGroupQueryTimeout.current = setTimeout(() => {
-            console.log("firing log group query")
             triggerLogGroupQuery(prefix);
         }, 1000);
     };
 
-    const handleLogGroupSelected = async (logGroup: string, selected: boolean) => {
-        setSelectedLogGroups(selectedLogGroups => {
-            const newSelectedLogGroups = selectedLogGroups.filter((selectedLogGroup => selectedLogGroup !== logGroup));
+    const handleLogGroupSelected = async (
+        logGroup: string,
+        selected: boolean
+    ) => {
+        setSelectedLogGroups((selectedLogGroups) => {
+            const newSelectedLogGroups = selectedLogGroups.filter(
+                (selectedLogGroup) => selectedLogGroup !== logGroup
+            );
             if (selected) {
                 newSelectedLogGroups.push(logGroup);
             }
-            console.log(newSelectedLogGroups)
             return newSelectedLogGroups;
         });
     };
@@ -296,7 +295,9 @@ export const QueryPage: React.FC<{}> = () => {
                                 onCloseClicked={() => {
                                     controlContext.removeQueryDefinition(index);
                                 }}
-                                queryTabName={queryDefinition.queryId || 'New Query'}
+                                queryTabName={
+                                    queryDefinition.queryId || 'New Query'
+                                }
                                 key={`QueryTab=${index}`}
                             />
                         )
@@ -311,85 +312,157 @@ export const QueryPage: React.FC<{}> = () => {
                     </Tab>
                 </TabList>
                 <TabPanels height={`calc(100% - ${tabBarHeight}px)`}>
-                    {controlContext.queryDefinitions.map((queryDefinition, index) => {
-                        return (
-                            <QueryTabPanel
-                                style={{
-                                    height: '100%',
-                                    overflowX: 'hidden',
-                                }}
-                                key={`QueryTabPanel=${index}`}
-                            >
-                                <Box height={queryBoxHeight}>
-                                    <Box data-cy="query-title">
-                                        {queryDefinition.queryId || 'New Query'}
-                                    </Box>
-                                    <Flex alignItems={'center'} flexDirection={"column"}>
-                                        <Flex flexDirection={"row"} width="100%">
-                                            <FormLabel
-                                                width={'100px'}
-                                                textAlign={'center'}
-                                                verticalAlign={'middle'}
-                                                margin={0}
-                                                htmlFor="log-group-name"
-                                            >
-                                                Log Groups:
-                                            </FormLabel>
-                                            <Flex flexDirection={"row"} flexWrap="wrap">
-                                                {selectedLogGroups.map(selectedLogGroup => (
-                                                    <Box position={"relative"}>
-                                                        <Box backgroundColor={"lightgrey"} borderRadius="0.2em" paddingRight={"2em"}>
-                                                            {selectedLogGroup}
-                                                        </Box>
-                                                        <Button margin={'0em'} size="xs" onClick={(e) => {handleLogGroupSelected(selectedLogGroup, false)}} position="absolute" top={"0"} right={0}>
-                                                            X
-                                                        </Button>
-                                                    </Box>
-                                                ))}
-                                            </Flex>
-                                        </Flex>
-                                        <Box position={"relative"} width="100%" id="log-group-prefix-box">
-                                            <Input
-                                                type={'text'}
-                                                value={logGroupPrefix}
-                                                name="log-group-prefix"
-                                                placeholder='Enter Log Group prefix'
-                                                onChange={(e) =>
-                                                    handleLogGroupChange(e.target.value)
-                                                }
-                                            ></Input>
-                                            <Box position={"absolute"} width="100%" zIndex={200} display={logGroups.length > 0 ? "block" : "none"}>
-                                                <Flex backgroundColor="white" flexDirection={"column"} height="200px" overflow="auto">
-                                                    <LogGroupSelector logGroups={logGroups} selectedLogGroups={selectedLogGroups} onLogGroupSelected={handleLogGroupSelected}/>
-                                                </Flex>
-                                            </Box>
-                                        </Box>
-                                    </Flex>
-                                    <Textarea
-                                        value={queryPrompt}
-                                        name="query-prompt"
-                                        onChange={(e) =>
-                                            setQueryPrompt(e.target.value)
-                                        }
-                                    ></Textarea>
-                                    <Button onClick={handleRunQuery}>
-                                        Run query
-                                    </Button>
-                                </Box>
-                                <Box
+                    {controlContext.queryDefinitions.map(
+                        (queryDefinition, index) => {
+                            return (
+                                <QueryTabPanel
                                     style={{
-                                        height: `calc(100% - ${queryBoxHeight}px)`,
-                                        margin: '2px',
+                                        height: '100%',
+                                        overflowX: 'hidden',
                                     }}
+                                    key={`QueryTabPanel=${index}`}
                                 >
-                                    {renderQueryPanelContents(
-                                        queryDefinition,
-                                        queryResults
-                                    )}
-                                </Box>
-                            </QueryTabPanel>
-                        );
-                    })}
+                                    <Box height={queryBoxHeight}>
+                                        <Box data-cy="query-title">
+                                            {queryDefinition.queryId ||
+                                                'New Query'}
+                                        </Box>
+                                        <Flex
+                                            alignItems={'center'}
+                                            flexDirection={'column'}
+                                        >
+                                            <Flex
+                                                flexDirection={'row'}
+                                                width="100%"
+                                            >
+                                                <FormLabel
+                                                    width={'100px'}
+                                                    textAlign={'center'}
+                                                    verticalAlign={'middle'}
+                                                    margin={0}
+                                                    htmlFor="log-group-name"
+                                                >
+                                                    Log Groups:
+                                                </FormLabel>
+                                                <Flex
+                                                    flexDirection={'row'}
+                                                    flexWrap="wrap"
+                                                >
+                                                    {selectedLogGroups.map(
+                                                        (selectedLogGroup) => (
+                                                            <Box
+                                                                position={
+                                                                    'relative'
+                                                                }
+                                                            >
+                                                                <Box
+                                                                    backgroundColor={
+                                                                        'lightgrey'
+                                                                    }
+                                                                    borderRadius="0.2em"
+                                                                    paddingRight={
+                                                                        '2em'
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        selectedLogGroup
+                                                                    }
+                                                                </Box>
+                                                                <Button
+                                                                    margin={
+                                                                        '0em'
+                                                                    }
+                                                                    size="xs"
+                                                                    onClick={() => {
+                                                                        handleLogGroupSelected(
+                                                                            selectedLogGroup,
+                                                                            false
+                                                                        );
+                                                                    }}
+                                                                    position="absolute"
+                                                                    top={'0'}
+                                                                    right={0}
+                                                                >
+                                                                    X
+                                                                </Button>
+                                                            </Box>
+                                                        )
+                                                    )}
+                                                </Flex>
+                                            </Flex>
+                                            <Box
+                                                position={'relative'}
+                                                width="100%"
+                                                id="log-group-prefix-box"
+                                            >
+                                                <Input
+                                                    type={'text'}
+                                                    value={logGroupPrefix}
+                                                    name="log-group-prefix"
+                                                    placeholder="Enter Log Group prefix"
+                                                    onChange={(e) =>
+                                                        handleLogGroupChange(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                ></Input>
+                                                <Box
+                                                    position={'absolute'}
+                                                    width="100%"
+                                                    zIndex={200}
+                                                    display={
+                                                        logGroups.length > 0
+                                                            ? 'block'
+                                                            : 'none'
+                                                    }
+                                                >
+                                                    <Flex
+                                                        backgroundColor="white"
+                                                        flexDirection={'column'}
+                                                        height="200px"
+                                                        overflow="auto"
+                                                    >
+                                                        <LogGroupSelector
+                                                            logGroups={
+                                                                logGroups
+                                                            }
+                                                            selectedLogGroups={
+                                                                selectedLogGroups
+                                                            }
+                                                            onLogGroupSelected={
+                                                                handleLogGroupSelected
+                                                            }
+                                                        />
+                                                    </Flex>
+                                                </Box>
+                                            </Box>
+                                        </Flex>
+                                        <Textarea
+                                            value={queryPrompt}
+                                            name="query-prompt"
+                                            onChange={(e) =>
+                                                setQueryPrompt(e.target.value)
+                                            }
+                                        ></Textarea>
+                                        <Button onClick={handleRunQuery}>
+                                            Run query
+                                        </Button>
+                                    </Box>
+                                    <Box
+                                        style={{
+                                            height: `calc(100% - ${queryBoxHeight}px)`,
+                                            margin: '2px',
+                                        }}
+                                    >
+                                        {renderQueryPanelContents(
+                                            queryDefinition,
+                                            queryResults
+                                        )}
+                                    </Box>
+                                </QueryTabPanel>
+                            );
+                        }
+                    )}
                     <TabPanel>
                         {controlContext.queryDefinitions.length <= 0
                             ? 'Welcome to CloudHawk! Press "+" to open your first query.'
