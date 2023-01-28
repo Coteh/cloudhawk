@@ -17,13 +17,17 @@ import (
 var svc *cloudwatchlogs.CloudWatchLogs
 
 type CloudwatchQuery struct {
-	LogGroupName string `form:"logGroupName"`
+	LogGroupName  string   `form:"logGroupName"`
 	LogGroupNames []string `form:"logGroupNames"`
-	Query string `form:"query" binding:"required"`
+	Query         string   `form:"query" binding:"required"`
 }
 
 type CloudwatchQueryResultsInput struct {
 	QueryId string `form:"queryId" binding:"required"`
+}
+
+type CloudwatchLogGroupsInput struct {
+	LogGroupPrefix string `form:"logGroupPrefix" binding:"required"`
 }
 
 func StartQuerySingle(logGroupName string, queryString string) (string, error) {
@@ -32,10 +36,10 @@ func StartQuerySingle(logGroupName string, queryString string) (string, error) {
 
 func StartQuery(logGroupNames []string, queryString string) (string, error) {
 	resp, err := svc.StartQuery(&cloudwatchlogs.StartQueryInput{
-		StartTime: aws.Int64(time.Date(2019, 1, 1, 1, 1, 1, 1, time.UTC).Unix()),
-		EndTime: aws.Int64(time.Now().Unix()),
+		StartTime:     aws.Int64(time.Date(2019, 1, 1, 1, 1, 1, 1, time.UTC).Unix()),
+		EndTime:       aws.Int64(time.Now().Unix()),
 		LogGroupNames: aws.StringSlice(logGroupNames),
-		QueryString: aws.String(queryString),
+		QueryString:   aws.String(queryString),
 	})
 	if err != nil {
 		return "", err
@@ -55,12 +59,41 @@ func GetQueryResults(queryId *string) (*cloudwatchlogs.GetQueryResultsOutput, er
 	return resp2, nil
 }
 
+func GetLogGroups(prefix *string) ([]string, error) {
+	logGroups := make([]string, 0)
+
+	var nextToken *string = nil
+
+	for {
+		// TODO figure out if substring can be passed as well instead of prefix
+		resp, err := svc.DescribeLogGroups(&cloudwatchlogs.DescribeLogGroupsInput{
+			LogGroupNamePrefix: prefix,
+			NextToken:          nextToken,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, logGroup := range resp.LogGroups {
+			logGroups = append(logGroups, *logGroup.LogGroupName)
+		}
+
+		if resp.NextToken == nil {
+			break
+		}
+
+		nextToken = resp.NextToken
+	}
+
+	return logGroups, nil
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Could not load .env file, using environment")
 	}
-	
+
 	endpoint := os.Getenv("AWS_ENDPOINT")
 	sess := session.Must(session.NewSession(&aws.Config{
 		Endpoint: &endpoint,
@@ -76,7 +109,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.Use(static.Serve("/", static.LocalFile("./build", true)))
-	
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -88,7 +121,7 @@ func main() {
 		if c.ShouldBind(&queryInput) == nil {
 			var queryId string
 			var err error
-			if (queryInput.LogGroupName != "") {
+			if queryInput.LogGroupName != "" {
 				queryId, err = StartQuerySingle(queryInput.LogGroupName, queryInput.Query)
 			} else {
 				queryId, err = StartQuery(queryInput.LogGroupNames, queryInput.Query)
@@ -98,7 +131,7 @@ func main() {
 				// If user made an error with their query, return 400
 				log.Println(err)
 				c.JSON(400, gin.H{
-					"status": "error",
+					"status":  "error",
 					"message": err.Error(),
 				})
 				return
@@ -119,7 +152,7 @@ func main() {
 			if err != nil {
 				log.Println(err)
 				c.JSON(400, gin.H{
-					"status": "error",
+					"status":  "error",
 					"message": err.Error(),
 				})
 				return
@@ -127,9 +160,37 @@ func main() {
 			c.JSON(200, gin.H{
 				"status": "success",
 				"data": gin.H{
-					"queryStatus": result.Status,
+					"queryStatus":  result.Status,
 					"queryResults": result.Results,
 				},
+			})
+		}
+	})
+
+	r.GET("/log_groups", func(c *gin.Context) {
+		var logGroupsInput CloudwatchLogGroupsInput
+		err = c.ShouldBind(&logGroupsInput)
+		if err == nil {
+			result, err := GetLogGroups(&logGroupsInput.LogGroupPrefix)
+			if err != nil {
+				log.Println(err)
+				c.JSON(400, gin.H{
+					"status":  "error",
+					"message": err.Error(),
+				})
+				return
+			}
+			c.JSON(200, gin.H{
+				"status": "success",
+				"data": gin.H{
+					"logGroups": result,
+				},
+			})
+		} else {
+			log.Println(err)
+			c.JSON(400, gin.H{
+				"status":  "error",
+				"message": err.Error(),
 			})
 		}
 	})
