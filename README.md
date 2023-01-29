@@ -8,7 +8,7 @@
 
 > Stable Diffusion: _A clip art image of a hawk flying over a cloud. Cartoon, clip art, simple design, logo_
 
-This is an alternative frontend for CloudWatch. Frontend at this time is written in React/JavaScript, bootstrapped with creat-react-app, and the backend is written in Go.
+This is an alternative frontend for CloudWatch. Frontend at this time is written in React/JavaScript, bootstrapped with create-react-app, and the backend is written in Go.
 
 ![Screenshot](/screenshots/screenshot.gif 'Screenshot')
 
@@ -69,6 +69,8 @@ npm start
 ## Sequence Diagram
 
 NOTE: Certain parts are not implemented yet, namely the persistent store and log streaming.
+
+This diagram is best viewed on the GitHub website.
 
 ```mermaid
 sequenceDiagram
