@@ -40,6 +40,14 @@ export const LogView: React.FC<LogViewProps> = ({
             newExpandedRows.set(index, expanded);
             return newExpandedRows;
         });
+        performAutoScroll(index);
+    };
+
+    // TODO auto-scroll to exact position instead of to specific index
+    const performAutoScroll = async (index: number) => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (!ref.current) return;
+        ref.current.scrollToIndex(index);
     };
 
     const HeaderRow = () => {
@@ -50,22 +58,30 @@ export const LogView: React.FC<LogViewProps> = ({
 
         return (
             <Tr>
-                {queryResult.map((column) => (
-                    <Th
-                        width={200}
-                        style={{
-                            background: 'blue',
-                            color: 'white',
-                        }}
-                    >
-                        {(!queryDefinition.filteredColumns ||
+                <Th
+                    width="1px"
+                    style={{
+                        background: 'blue',
+                        color: 'white',
+                    }}
+                />
+                {queryResult.map(
+                    (column) =>
+                        (!queryDefinition.filteredColumns ||
                             queryDefinition.filteredColumns.length === 0 ||
                             queryDefinition.filteredColumns.includes(
                                 column.Field
-                            )) &&
-                            column.Field}
-                    </Th>
-                ))}
+                            )) && (
+                            <Th
+                                style={{
+                                    background: 'blue',
+                                    color: 'white',
+                                }}
+                            >
+                                {column.Field}
+                            </Th>
+                        )
+                )}
             </Tr>
         );
     };
@@ -77,10 +93,18 @@ export const LogView: React.FC<LogViewProps> = ({
         }
         const queryResult = queryResults[index];
 
-        let ci = 0;
-
         return (
             <Fragment key={`Row_${index}`}>
+                <Td
+                    style={{
+                        cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                        expandCollapseRow(index, !expanded);
+                    }}
+                >
+                    {expanded ? <RiArrowDownSFill /> : <RiArrowRightSFill />}
+                </Td>
                 {queryResult.map((column) => {
                     // TODO fix filtered columns not taking up full width of table
                     if (
@@ -90,43 +114,22 @@ export const LogView: React.FC<LogViewProps> = ({
                     ) {
                         return <></>;
                     }
-                    ci += 1;
                     return (
                         <Td
                             className="result-td"
                             flexDirection={'column'}
-                            width={500}
                             maxWidth={1000}
+                            style={{
+                                cursor: 'pointer',
+                            }}
                             // TODO if just selecting text, do not expand/collapse the row
                             onClick={() => {
                                 expandCollapseRow(index, !expanded);
-                                // TODO fix table scrolling back to the top
-                                setTimeout(() => {
-                                    if (!ref.current) {
-                                        return;
-                                    }
-                                    ref.current.scrollIntoView({
-                                        index: index + 10,
-                                        behavior: 'auto',
-                                        done: () => {},
-                                    });
-                                }, 0);
                             }}
                         >
-                            <Flex justifyContent={'space-between'}>
-                                {ci === 1 ? (
-                                    <Box>
-                                        {expanded ? (
-                                            <RiArrowDownSFill />
-                                        ) : (
-                                            <RiArrowRightSFill />
-                                        )}
-                                    </Box>
-                                ) : (
-                                    <></>
-                                )}
-                                <Box whiteSpace={'normal'}>{column.Value}</Box>
-                            </Flex>
+                            <Box whiteSpace={'normal'} wordBreak="break-all">
+                                {column.Value}
+                            </Box>
                         </Td>
                     );
                 })}
@@ -148,7 +151,7 @@ export const LogView: React.FC<LogViewProps> = ({
                         overflowX={'initial'}
                     />
                 )),
-                Table: (props) => <Table {...props} variant="striped" />,
+                Table: (props) => <Table {...props} layout="fixed" />,
                 TableHead: Thead,
                 TableRow: (props) => {
                     const index = props['data-index'];
@@ -161,7 +164,12 @@ export const LogView: React.FC<LogViewProps> = ({
                             <Tr {...props} />
                             {queryResult && expanded && (
                                 <Tr>
-                                    <Td colSpan={5}>
+                                    <Td
+                                        colSpan={
+                                            queryDefinition.filteredColumns
+                                                .length + 1
+                                        }
+                                    >
                                         <Box>
                                             {queryResult.map((column) => (
                                                 <>
@@ -183,26 +191,8 @@ export const LogView: React.FC<LogViewProps> = ({
                                                                 onColumnRemove(
                                                                     column.Field
                                                                 );
-                                                                // TODO fix table scrolling back to the top
-                                                                setTimeout(
-                                                                    () => {
-                                                                        if (
-                                                                            !ref.current
-                                                                        ) {
-                                                                            return;
-                                                                        }
-                                                                        ref.current.scrollIntoView(
-                                                                            {
-                                                                                index:
-                                                                                    index +
-                                                                                    10,
-                                                                                behavior:
-                                                                                    'auto',
-                                                                                done: () => {},
-                                                                            }
-                                                                        );
-                                                                    },
-                                                                    0
+                                                                performAutoScroll(
+                                                                    index
                                                                 );
                                                             }}
                                                         >
@@ -219,26 +209,8 @@ export const LogView: React.FC<LogViewProps> = ({
                                                                 onColumnAdd(
                                                                     column.Field
                                                                 );
-                                                                // TODO fix table scrolling back to the top
-                                                                setTimeout(
-                                                                    () => {
-                                                                        if (
-                                                                            !ref.current
-                                                                        ) {
-                                                                            return;
-                                                                        }
-                                                                        ref.current.scrollIntoView(
-                                                                            {
-                                                                                index:
-                                                                                    index +
-                                                                                    10,
-                                                                                behavior:
-                                                                                    'auto',
-                                                                                done: () => {},
-                                                                            }
-                                                                        );
-                                                                    },
-                                                                    0
+                                                                performAutoScroll(
+                                                                    index
                                                                 );
                                                             }}
                                                         >
