@@ -173,6 +173,7 @@ export const QueryPage: React.FC<{}> = () => {
 
     const tabBarHeight = 58;
     const queryBoxHeight = 220;
+    const queryLabelHeight = 6;
 
     const handleColumnAdd = (column: string) => {
         const newQueryDef = JSON.parse(JSON.stringify(currentQueryDef));
@@ -319,11 +320,12 @@ export const QueryPage: React.FC<{}> = () => {
                                     style={{
                                         height: '100%',
                                         overflowX: 'hidden',
+                                        overflowY: "hidden",
                                     }}
                                     key={`QueryTabPanel=${index}`}
                                 >
                                     <Box height={queryBoxHeight}>
-                                        <Box data-cy="query-title">
+                                        <Box data-cy="query-title" height={queryLabelHeight}>
                                             {queryDefinition.queryId ||
                                                 'New Query'}
                                         </Box>
@@ -450,7 +452,7 @@ export const QueryPage: React.FC<{}> = () => {
                                     </Box>
                                     <Box
                                         style={{
-                                            height: `calc(100% - ${queryBoxHeight}px)`,
+                                            height: `calc(100% - ${queryBoxHeight + queryLabelHeight + tabBarHeight}px)`,
                                             margin: '2px',
                                         }}
                                     >
