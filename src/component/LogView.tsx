@@ -133,7 +133,6 @@ export const LogView: React.FC<LogViewProps> = ({
                         </Td>
                     );
                 })}
-                {/* TODO fix the table horizontal scroll not appearing unless you scroll the document, the heights of the dashboard need to be adjusted so that the whole thing will fit in the view without scrolling */}
             </Fragment>
         );
     };
