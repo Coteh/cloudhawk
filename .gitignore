@@ -174,3 +174,6 @@ volume/
 # Cypress output
 cypress/videos
 cypress/screenshots
+
+# Debug binary
+__debug_bin

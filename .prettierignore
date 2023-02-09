@@ -3,3 +3,6 @@ server
 
 build/
 volume/
+
+# Debug binary
+__debug_bin

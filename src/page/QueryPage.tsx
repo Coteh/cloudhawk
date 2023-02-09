@@ -73,6 +73,7 @@ export const QueryPage: React.FC<{}> = () => {
     const [selectedLogGroups, setSelectedLogGroups] = useState<string[]>([]);
 
     const logGroupQueryTimeout = useRef<NodeJS.Timeout>();
+    const logGroupPrefixBoxRefs = useRef<Array<HTMLDivElement | null>>([]);
 
     const handleTabChange = (index: number) => {
         const currentQueryDef =
@@ -158,18 +159,40 @@ export const QueryPage: React.FC<{}> = () => {
     }, [resultsContext.hasRetrievedResults]);
 
     useEffect(() => {
-        const closeLogGroupsPanelByKey = (e: any) => {
+        logGroupPrefixBoxRefs.current = logGroupPrefixBoxRefs.current.slice(
+            0,
+            controlContext.queryDefinitions.length
+        );
+    }, [controlContext.queryDefinitions]);
+
+    useEffect(() => {
+        const closeLogGroupsPanelByKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 setLogGroups([]);
             }
         };
 
+        const closeLogGroupsPanelByClick = (e: MouseEvent) => {
+            const targetElem = e.target;
+            const logGroupPrefixElem =
+                logGroupPrefixBoxRefs.current[currentTabIndex];
+            if (!targetElem || !logGroupPrefixElem) {
+                return;
+            }
+            if (logGroupPrefixElem.contains(targetElem as Node)) {
+                return;
+            }
+            setLogGroups([]);
+        };
+
         document.addEventListener('keydown', closeLogGroupsPanelByKey);
+        document.addEventListener('click', closeLogGroupsPanelByClick);
 
         return () => {
             document.removeEventListener('keydown', closeLogGroupsPanelByKey);
+            document.removeEventListener('click', closeLogGroupsPanelByClick);
         };
-    }, []);
+    }, [currentTabIndex]);
 
     const tabBarHeight = 58;
     const queryBoxHeight = 220;
@@ -393,7 +416,11 @@ export const QueryPage: React.FC<{}> = () => {
                                             <Box
                                                 position={'relative'}
                                                 width="100%"
-                                                id="log-group-prefix-box"
+                                                ref={(el) =>
+                                                    (logGroupPrefixBoxRefs.current[
+                                                        index
+                                                    ] = el)
+                                                }
                                             >
                                                 <Input
                                                     type={'text'}
