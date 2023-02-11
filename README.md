@@ -47,9 +47,7 @@ go run main.go
 ### Run with Docker
 
 ```sh
-./scripts/build-docker-image.sh
-
-docker run --env-file .env -v $HOME/.aws:/root/.aws -p 8080:8080 -d cloudhawk
+docker run --env-file .env -v $HOME/.aws:/root/.aws -p 8080:8080 -d coteh/cloudhawk:latest
 ```
 
 ## Development
