@@ -25,6 +25,11 @@ First, create an `.env` file using `.env.example` as the base, or simply define 
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
 AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+# Alternatively, you can also let the AWS SDK load credentials from shared credentials file.
+# However, AWS_SDK_LOAD_CONFIG needs to be set for the region to be pulled from the config.
+# https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
+# AWS_SDK_LOAD_CONFIG=true
 ```
 
 ### Run without Docker
@@ -44,7 +49,7 @@ go run main.go
 ```sh
 ./scripts/build-docker-image.sh
 
-docker run --env-file .env -p 8080:8080 -d cloudhawk
+docker run --env-file .env -v $HOME/.aws:/root/.aws -p 8080:8080 -d cloudhawk
 ```
 
 ## Development
