@@ -46,9 +46,19 @@ go run main.go
 
 ### Run with Docker
 
+#### Using Environment Variables only
+
+```sh
+docker run --env-file .env -p 8080:8080 -d coteh/cloudhawk:latest
+```
+
+#### Using Shared Credentials file
+
 ```sh
 docker run --env-file .env -v $HOME/.aws:/root/.aws -p 8080:8080 -d coteh/cloudhawk:latest
 ```
+
+CloudHawk should then be available at http://localhost:8080/.
 
 ## Development
 
@@ -99,7 +109,6 @@ sequenceDiagram
 
 A few ideas that I want to tackle:
 
--   Easier way to select multiple log groups
 -   Ability to download logs to file
 -   Generate a shareable link to the query on CloudWatch web console
 -   Ability to change region on per-query basis
