@@ -6,7 +6,7 @@
     "license": "MIT",
     "dependencies": {
         "@chakra-ui/react": "^2.7.0",
-        "@emotion/react": "^11.11.0",
+        "@emotion/react": "^11.11.1",
         "@emotion/styled": "^11.11.0",
         "@types/node": "^16.18.2",
         "@types/react": "^18.0.29",
